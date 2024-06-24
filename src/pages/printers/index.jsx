@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
@@ -14,26 +14,72 @@ export default function Impressoras() {
   const [copySpeed, setCopySpeed] = useState('');
   const [resolution, setResolution] = useState('');
   const [memory, setMemory] = useState('');
+  const [equipamentos, setEquipamentos] = useState([]);
 
-  function sendData() {
-    const formattedData = {
-      Modelo: model,
-      'Velocidade de Copia': copySpeed,
-      Resolução: resolution,
-      'Capacidade de Memória': memory,
-      NFC: nfc ? nfc.label : '',
-      'Data de Compra': purchaseDate ? purchaseDate.toLocaleDateString('pt-BR') : '',
+  useEffect(() => {
+    fetchEquipamentos();
+  }, []);
+
+  const fetchEquipamentos = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE5MTkyMDU5LCJleHAiOjE3MjY5NjgwNTl9.fF_3KfkO5HnkK8liQVI6OGB0B92CuSRyO_cLmVmJY4c");
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow"
     };
 
-    console.log(formattedData);
-    // Adicione qualquer lógica adicional aqui, como enviar os dados para um servidor
+    fetch("http://localhost:3000/equipamentos/", requestOptions)
+      .then(response => response.json())
+      .then(result => {
+        setEquipamentos(result.equipamentos);
+      })
+      .catch(error => console.error(error));
   }
 
-  function openModal() {
+  const sendData = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE5MTkyMDU5LCJleHAiOjE3MjY5NjgwNTl9.fF_3KfkO5HnkK8liQVI6OGB0B92CuSRyO_cLmVmJY4c");
+
+    const formattedData = {
+      modelo: model,
+      velocidade_copia: copySpeed,
+      resolucao: resolution,
+      capacidade_de_memoria: memory,
+      nfc: nfc.value === 'sim',
+      data_compra: purchaseDate ? purchaseDate.toISOString().split('T')[0] : '',
+    };
+
+    const raw = JSON.stringify(formattedData);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    fetch("http://localhost:3000/equipamentos/", requestOptions)
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert("Equipamento cadastrado com sucesso!");
+          setEquipamentos([...equipamentos, result.equipamento]);
+          closeModal();
+        } else {
+          alert("Erro ao cadastrar equipamento.");
+        }
+      })
+      .catch(error => console.error(error));
+  }
+
+  const openModal = () => {
     setModalIsOpen(true);
   }
 
-  function closeModal() {
+  const closeModal = () => {
     setModalIsOpen(false);
   }
 
@@ -64,14 +110,16 @@ export default function Impressoras() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="py-2 border-t">John Doe</td>
-              <td className="py-2 border-t">30 ppm</td>
-              <td className="py-2 border-t">1200x1200 dpi</td>
-              <td className="py-2 border-t">256 MB</td>
-              <td className="py-2 border-t">Sim</td>
-              <td className="py-2 border-t">01/01/2023</td>
-            </tr>
+            {equipamentos.map(equipamento => (
+              <tr key={equipamento.id}>
+                <td className="py-2 border-t">{equipamento.modelo}</td>
+                <td className="py-2 border-t">{equipamento.velocidade_copia}</td>
+                <td className="py-2 border-t">{equipamento.resolucao}</td>
+                <td className="py-2 border-t">{equipamento.capacidade_de_memoria}</td>
+                <td className="py-2 border-t">{equipamento.nfc ? 'Sim' : 'Não'}</td>
+                <td className="py-2 border-t">{new Date(equipamento.data_compra).toLocaleDateString('pt-BR')}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -166,3 +214,4 @@ export default function Impressoras() {
     </div>
   );
 }
+  
