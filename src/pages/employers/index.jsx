@@ -17,7 +17,7 @@ export default function Employers() {
 
   useEffect(() => {
     const myHeaders = new Headers();
-    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE5MTkyMDU5LCJleHAiOjE3MjY5NjgwNTl9.fF_3KfkO5HnkK8liQVI6OGB0B92CuSRyO_cLmVmJY4c");
+    myHeaders.append("Authorization", "web");
 
     const requestOptions = {
       method: "GET",
@@ -25,7 +25,7 @@ export default function Employers() {
       redirect: "follow",
     };
 
-    fetch("http://localhost:3000/users/", requestOptions)
+    fetch("http://192.168.0.155:3000/users/", requestOptions)
       .then((response) => response.json())
       .then((result) => {
         console.log(result);
@@ -81,7 +81,7 @@ export default function Employers() {
       redirect: "follow",
     };
 
-    fetch(`http://localhost:3000/users/${employee.id}`, requestOptions)
+    fetch(`http://192.168.0.155:3000/users/${employee.id}`, requestOptions)
       .then((response) => response.json())
       .then((result) => {
         console.log(result);
@@ -115,7 +115,7 @@ export default function Employers() {
       redirect: "follow",
     };
 
-    fetch("http://localhost:3000/users/register", requestOptions)
+    fetch("http://192.168.0.155:3000/users/register", requestOptions)
       .then((response) => response.json())
       .then((result) => {
         console.log(result);
@@ -159,7 +159,7 @@ export default function Employers() {
               <tr key={employee.id}>
                 <td className="py-2 border-t">{employee.name}</td>
                 <td className="py-2 border-t">{employee.email}</td>
-                <td className="py-2 border-t">{employee.status ? 'Sim' : 'Não'}</td>
+                <td className="py-2 border-t">{employee.status ? 'Ativado' : 'Desativado'}</td>
                 <td className="py-2 border-t text-blue-500">
                   <button onClick={() => openEditModal(employee)}>
                     Editar

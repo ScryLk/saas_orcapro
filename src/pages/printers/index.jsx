@@ -14,7 +14,12 @@ export default function Impressoras() {
   const [copySpeed, setCopySpeed] = useState('');
   const [resolution, setResolution] = useState('');
   const [memory, setMemory] = useState('');
+  const [controlPanel, setControlPanel] = useState(null);
+  const [duplex, setDuplex] = useState(null);
   const [equipamentos, setEquipamentos] = useState([]);
+  const [paperHeight, setPaperHeight] = useState(null);
+
+
 
   useEffect(() => {
     fetchEquipamentos();
@@ -22,7 +27,7 @@ export default function Impressoras() {
 
   const fetchEquipamentos = () => {
     const myHeaders = new Headers();
-    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE5MTkyMDU5LCJleHAiOjE3MjY5NjgwNTl9.fF_3KfkO5HnkK8liQVI6OGB0B92CuSRyO_cLmVmJY4c");
+    myHeaders.append("Authorization", "web");
 
     const requestOptions = {
       method: "GET",
@@ -30,7 +35,7 @@ export default function Impressoras() {
       redirect: "follow"
     };
 
-    fetch("http://localhost:3000/equipamentos/", requestOptions)
+    fetch("http://192.168.0.155:3000/equipamentos/", requestOptions)
       .then(response => response.json())
       .then(result => {
         setEquipamentos(result.equipamentos);
@@ -41,15 +46,18 @@ export default function Impressoras() {
   const sendData = () => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE5MTkyMDU5LCJleHAiOjE3MjY5NjgwNTl9.fF_3KfkO5HnkK8liQVI6OGB0B92CuSRyO_cLmVmJY4c");
+    myHeaders.append("Authorization", "web");
 
     const formattedData = {
       modelo: model,
       velocidade_copia: copySpeed,
       resolucao: resolution,
       capacidade_de_memoria: memory,
-      nfc: nfc.value === 'sim',
+      nfc: nfc?.value === 'sim',
       data_compra: purchaseDate ? purchaseDate.toISOString().split('T')[0] : '',
+      paper_height: paperHeight?.value,
+      control_panel: controlPanel?.value === 'sim',
+      duplex: duplex?.value === 'sim',
     };
 
     const raw = JSON.stringify(formattedData);
@@ -61,7 +69,7 @@ export default function Impressoras() {
       redirect: "follow"
     };
 
-    fetch("http://localhost:3000/equipamentos/", requestOptions)
+    fetch("http://192.168.0.155:3000/equipamentos/", requestOptions)
       .then(response => response.json())
       .then(result => {
         if (result.success) {
@@ -88,6 +96,21 @@ export default function Impressoras() {
     { value: 'nao', label: 'Não' },
   ];
 
+  const paperHeights = [
+    { value: 'a4', label: 'A4' },
+    { value: 'a3', label: 'A3' },
+  ];
+
+  const controlPanelOptions = [
+    { value: 'sim', label: 'Sim' },
+    { value: 'nao', label: 'Não' },
+  ];
+
+  const duplexOptions = [
+    { value: 'sim', label: 'Sim' },
+    { value: 'nao', label: 'Não' },
+  ];
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-4xl relative">
@@ -102,10 +125,11 @@ export default function Impressoras() {
           <thead>
             <tr>
               <th className="py-2">Modelo</th>
-              <th className="py-2">Velocidade de Copia</th>
               <th className="py-2">Resolução</th>
               <th className="py-2">Capacidade/Memória</th>
               <th className="py-2">NFC</th>
+              <th className="py-2">Painel de Controle</th>
+              <th className="py-2">Frente e Verso</th>
               <th className="py-2">Data de compra</th>
             </tr>
           </thead>
@@ -117,6 +141,8 @@ export default function Impressoras() {
                 <td className="py-2 border-t">{equipamento.resolucao}</td>
                 <td className="py-2 border-t">{equipamento.capacidade_de_memoria}</td>
                 <td className="py-2 border-t">{equipamento.nfc ? 'Sim' : 'Não'}</td>
+                <td className="py-2 border-t">{equipamento.control_panel ? 'Sim' : 'Não'}</td>
+                <td className="py-2 border-t">{equipamento.duplex ? 'Sim' : 'Não'}</td>
                 <td className="py-2 border-t">{new Date(equipamento.data_compra).toLocaleDateString('pt-BR')}</td>
               </tr>
             ))}
@@ -147,15 +173,6 @@ export default function Impressoras() {
             />
           </label>
           <div className="flex space-x-4">
-            <label className="block mb-2 flex-1">
-              Velocidade de Copia:
-              <input
-                type="text"
-                className="border w-full p-2 mt-1 rounded"
-                value={copySpeed}
-                onChange={(e) => setCopySpeed(e.target.value)}
-              />
-            </label>
             <label className="block mb-2 flex-1">
               Resolução:
               <input
@@ -196,6 +213,35 @@ export default function Impressoras() {
                 dateFormat="dd/MM/yyyy"
               />
             </label>
+            <label className="block mb-2 flex-1">
+              Tipo de Papel:
+              <Select
+                options={paperHeights}
+                value={paperHeight}
+                onChange={setPaperHeight}
+                className="mt-1"
+              />
+            </label>
+          </div>
+          <div className="flex space-x-4">
+            <label className="block mb-2 flex-1">
+              Painel de Controle:
+              <Select
+                options={controlPanelOptions}
+                value={controlPanel}
+                onChange={setControlPanel}
+                className="mt-1"
+              />
+            </label>
+            <label className="block mb-2 flex-1">
+              Frente e Verso:
+              <Select
+                options={duplexOptions}
+                value={duplex}
+                onChange={setDuplex}
+                className="mt-1"
+              />
+            </label>
           </div>
           <div className="flex justify-end mt-4">
             <button
@@ -214,4 +260,3 @@ export default function Impressoras() {
     </div>
   );
 }
-  
